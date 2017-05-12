@@ -215,7 +215,7 @@ class Event
 			'startDateTime' => 'start.dateTime',
 			'endDateTime'   => 'end.dateTime',
 		]; 
-        return $fields[$name] ? $fields[$name] : $name;
+        return isset($fields[$name]) ? $fields[$name] : $name;
     }
 
     public function getSortDate()
