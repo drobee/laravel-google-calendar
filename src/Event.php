@@ -29,7 +29,7 @@ class Event
         return $event;
     }
 
-    public static function create(array $properties, string $calendarId = null)
+    public static function create($properties, $calendarId = null)
     {
         $event = new static();
 
@@ -87,12 +87,12 @@ class Event
         array_set($this->googleEvent, $name, $value);
     }
 
-    public function exists(): bool
+    public function exists()
     {
         return $this->id != '';
     }
 
-    public function isAllDayEvent(): bool
+    public function isAllDayEvent()
     {
         return is_null($this->googleEvent['start']['dateTime']);
     }
@@ -109,8 +109,8 @@ class Event
         Carbon $startDateTime = null,
         Carbon $endDateTime = null,
         array $queryParameters = [],
-        string $calendarId = null
-    ): Collection {
+        $calendarId = null
+    ) {
         $googleCalendar = static::getGoogleCalendar($calendarId);
 
         $googleEvents = $googleCalendar->listEvents($startDateTime, $endDateTime, $queryParameters);
@@ -131,7 +131,7 @@ class Event
      *
      * @return \Spatie\GoogleCalendar\Event
      */
-    public static function find($eventId, $calendarId = null): Event
+    public static function find($eventId, $calendarId = null)
     {
         $googleCalendar = static::getGoogleCalendar($calendarId);
 
@@ -140,9 +140,9 @@ class Event
         return static::createFromGoogleCalendarEvent($googleEvent, $calendarId);
     }
 
-    public function save($method = null): Event
+    public function save($method = null)
     {
-        $method = $method ?? ($this->exists() ? 'updateEvent' : 'insertEvent');
+        $method = $method ? $method : ($this->exists() ? 'updateEvent' : 'insertEvent');
 
         $googleCalendar = $this->getGoogleCalendar($this->calendarId);
 
@@ -156,9 +156,9 @@ class Event
     /**
      * @param string $eventId
      */
-    public function delete(string $eventId = null)
+    public function delete($eventId = null)
     {
-        $this->getGoogleCalendar($this->calendarId)->deleteEvent($eventId ?? $this->id);
+        $this->getGoogleCalendar($this->calendarId)->deleteEvent($eventId ? $eventId : $this->id);
     }
 
     /**
@@ -168,7 +168,7 @@ class Event
      */
     protected static function getGoogleCalendar($calendarId = null)
     {
-        $calendarId = $calendarId ?? config('laravel-google-calendar.calendar_id');
+        $calendarId = $calendarId ? $calendarId : config('laravel-google-calendar.calendar_id');
 
         return GoogleCalendarFactory::createForCalendarId($calendarId);
     }
@@ -177,7 +177,7 @@ class Event
      * @param string         $name
      * @param \Carbon\Carbon $date
      */
-    protected function setDateProperty(string $name, Carbon $date)
+    protected function setDateProperty($name, Carbon $date)
     {
         $eventDateTime = new Google_Service_Calendar_EventDateTime();
 
@@ -205,19 +205,20 @@ class Event
         $this->attendees[] = $attendees;
     }
 
-    protected function getFieldName(string $name): string
+    protected function getFieldName($name)
     {
-        return [
-            'name'          => 'summary',
-            'description'   => 'description',
-            'startDate'     => 'start.date',
-            'endDate'       => 'end.date',
-            'startDateTime' => 'start.dateTime',
-            'endDateTime'   => 'end.dateTime',
-        ][$name] ?? $name;
+    	$fields = [
+			'name'          => 'summary',
+			'description'   => 'description',
+			'startDate'     => 'start.date',
+			'endDate'       => 'end.date',
+			'startDateTime' => 'start.dateTime',
+			'endDateTime'   => 'end.dateTime',
+		]; 
+        return $fields[$name] ? $fields[$name] : $name;
     }
 
-    public function getSortDate(): string
+    public function getSortDate()
     {
         if ($this->startDate) {
             return $this->startDate;
